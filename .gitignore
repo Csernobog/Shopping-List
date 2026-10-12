@@ -1,0 +1,20 @@
+
+# Titkos konfiguráció
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Ideiglenes fájlok
+*.log
+*.bak
+*.tmp
+
+# Adatbázis mentések
+*.sql
+*.dump

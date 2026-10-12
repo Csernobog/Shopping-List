@@ -1,0 +1,31 @@
+  
+  # change URL to valid REST API url !!!
+  
+  bevlist_add:
+    url: "http://192.168.0.202:8123/api/add"
+    method: POST
+    headers:
+      content-type: "application/json"
+    payload: >-
+      {
+        "mit": {{ mit | to_json }},
+        "mennyit": {{ mennyit | to_json }},
+        "me": {{ me | to_json }},
+        "honnan": {{ honnan | to_json }}
+      }
+  bevlist_delete:
+    url: "http://192.168.0.202:8123/api/delete"
+    method: POST
+    content_type: "application/json"
+    payload: >-
+      {
+        "mit": {{ mit | to_json }},
+        "honnan": {{ honnan | to_json }}
+
+  shopping_list_get:
+    url: "http://192.168.0.202:8123/api/list"
+    method: POST
+    content_type: "application/json"
+    payload: >
+      {{ {"lista": lista} | to_json }}
+    timeout: 15

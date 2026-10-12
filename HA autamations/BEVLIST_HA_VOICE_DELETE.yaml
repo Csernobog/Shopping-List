@@ -1,0 +1,60 @@
+alias: Bevásárlólista hangvezérlés - törlés
+description: AI alapú terméktörlés REST API-n keresztül
+triggers:
+  - trigger: conversation
+    command:
+      - Töröld [(a|az)]  {valami} [a] [listáról]
+      - Vedd le [(a|az)] {valami} [a] [listáról] 
+      - Töröld [(a|az)] {valami}
+      - Vedd le [(a|az)] {valami}
+actions:
+  - set_conversation_response: ''
+  - action: conversation.process
+    data:
+      agent_id: conversation.google_ai_conversation
+      language: hu
+      text: >-
+        Bevásárlólista TÖRLÉS.
+
+        A felhasználó kérése: {{ trigger.slots.valami }}
+
+        A kérésből határozd meg: - mit: a törlendő termék neve, alapalakban -
+        honnan: a bolt neve, ha megadta
+
+        Ha nincs bolt megadva, vagy minden boltból szeretné törölni, honnan
+        legyen JSON null.
+
+        Kizárólag JSON objektumot adj vissza: {"mit":"termék","honnan":null}
+
+        Ne írj magyarázatot vagy Markdown formázást.
+    response_variable: ai_valasz
+  - variables:
+      parsed: |-
+        {{ ai_valasz.response.speech.plain.speech
+           | from_json }}
+      media_players: |-
+        {{ device_entities(trigger.device_id)
+           | select('match', '^media_player\.')
+           | list }}
+      source_media_player: |-
+        {% set normal_players = media_players
+           | reject('search', 'sendspin')
+           | list %}
+        {{ normal_players | first
+           if normal_players | count > 0
+           else media_players | first }}
+  - action: rest_command.bevlist_delete
+    data:
+      mit: '{{ parsed.mit }}'
+      honnan: '{{ parsed.honnan }}'
+    response_variable: rest_valasz
+  - action: tts.cloud_say
+    data:
+      entity_id: '{{ source_media_player }}'
+      message: |-
+        {{ rest_valasz.content.response
+           | default('A törlési kérést feldolgoztam.', true) }}
+      options:
+        voice: TamasNeural
+      cache: false
+mode: single

@@ -1,0 +1,96 @@
+alias: Bevásárlólista - HA hangvezérlés - LIST
+description: Bevásárlólista lekérdezése Google AI boltnév-felismeréssel
+triggers:
+  - trigger: conversation
+    command:
+      - Mi van [(a|az)] {lista} listán
+      - Kérem [(a|az)] {lista} [bevásárló]listáját
+actions:
+  - variables:
+      lista: '{{ trigger.slots.lista | trim }}'
+      media_players: |
+        {{ device_entities(trigger.device_id)
+          | select('match', '^media_player\.')
+          | list }}
+      source_media_player: |
+        {% set normal_players = media_players
+          | reject('search', 'sendspin')
+          | list %}
+        {{ normal_players | first
+          if normal_players | count > 0
+          else media_players | first }}
+  - action: conversation.process
+    data:
+      agent_id: conversation.google_ai_conversation
+      text: >-
+        A következő szöveg egy magyar beszédfelismerő által felismert
+        bevásárlólista-név:
+
+        "{{ lista }}"
+
+        A szöveg egy bolt neve, amely fonetikusan vagy hibásan lehet leírva.
+
+        Állítsd vissza a bolt helyes, közismert nevét.
+
+        Példák: OSAN -> Auchan ósan -> Auchan lidöl -> Lidl praktiker ->
+        Praktiker aldi -> Aldi
+
+        Ha a név nem azonosítható egyértelműen, hagyd változatlanul.
+
+        Kizárólag érvényes JSON objektummal válaszolj. Ne használj markdown
+        formázást.
+
+        {"lista": "helyes boltnév"}
+    response_variable: ai_result
+  - variables:
+      ai_data: |-
+        {{ ai_result.response.speech.plain.speech
+           | replace('```json', '')
+           | replace('```', '')
+           | trim
+           | from_json(default={}) }}
+  - variables:
+      bolt: '{{ ai_data.get(''lista'', lista) | trim }}'
+  - action: rest_command.shopping_list_get
+    data:
+      lista: '{{ bolt }}'
+    response_variable: api_result
+    continue_on_error: true
+  - variables:
+      tts_message: |-
+        {% if api_result is defined
+              and api_result.status | int(0) == 200
+              and api_result.content is mapping
+              and api_result.content.get('status') == 'ok' %}
+          {% set d = api_result.content %}
+          {% set items = d.get('items', []) %}
+          {% if items | count > 0 %}
+            {% set ns = namespace(lines=[]) %}
+            {% for item in items %}
+              {% set line = item.mit %}
+              {% if item.mennyiseg is not none %}
+                {% set qty = item.mennyiseg | float %}
+                {% set qty_text = (qty | int | string)
+                    if qty == qty | int else qty | string %}
+                {% set line = line ~ ' ' ~ qty_text %}
+              {% endif %}
+              {% if item.egyseg is not none
+                    and item.egyseg | trim %}
+                {% set unit = 'darab' if item.egyseg == 'db'
+                    else item.egyseg %}
+                {% set line = line ~ ' ' ~ unit %}
+              {% endif %}
+              {% set ns.lines = ns.lines + [line ~ '.'] %}
+            {% endfor %}
+            A következő tételek szerepelnek
+            a {{ d.lista }} bevásárlólistán:
+            {{ ns.lines | join(' ') }}
+          {% else %}
+            A {{ d.lista }} bevásárlólista üres.
+          {% endif %}
+        {% else %}
+          Nem sikerült lekérdezni a bevásárlólistát.
+        {% endif %}
+  - set_conversation_response: '{{ tts_message | trim }}'
+mode: parallel
+max: 5
