@@ -69,11 +69,13 @@ ADD:
 - add hozzá {valami}      
 - tedd fel {valami}
 - vegyünk {valami}
+
 DELETE:
 - Töröld [(a|az)]  {valami} [a] [listáról]
 - Vedd le [(a|az)] {valami} [a] [listáról] 
 - Töröld [(a|az)] {valami}
 - Vedd le [(a|az)] {valami}
+
 LIST
 - Mi van [(a|az)] {lista} listán
 - Kérem [(a|az)] {lista} [bevásárló]listáját
