@@ -63,11 +63,12 @@ Az automatizációk a `HA autamations/` mappában találhatók. A rendszer magya
 A HA-konfigurációhoz a FastAPI szerver címét, a `rest_command` hívásokat és a Google AI Conversation agent azonosítóját a saját rendszeredhez kell igazítani.
 
 conversation parancsok:
+
 ADD:
-      - írd fel {valami}
-      - add hozzá {valami}
-      - tedd fel {valami}
-      - vegyünk {valami}
+- írd fel {valami}      
+- add hozzá {valami}      
+- tedd fel {valami}
+- vegyünk {valami}
 DELETE:
       - Töröld [(a|az)]  {valami} [a] [listáról]
       - Vedd le [(a|az)] {valami} [a] [listáról] 
