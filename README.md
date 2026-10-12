@@ -71,7 +71,7 @@ ADD:
 - vegyünk {valami}
 DELETE:
 - Töröld [(a|az)]  {valami} [a] [listáról]
-- - Vedd le [(a|az)] {valami} [a] [listáról] 
+- Vedd le [(a|az)] {valami} [a] [listáról] 
 - Töröld [(a|az)] {valami}
 - Vedd le [(a|az)] {valami}
 LIST
